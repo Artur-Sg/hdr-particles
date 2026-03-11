@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>p5.js Project</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <main id="app">
+      <canvas id="gpu-canvas"></canvas>
+    </main>
+    <div class="ui">
+      <div class="panel">
+        <details class="section" open>
+          <summary>HDR</summary>
+          <label class="control control-inline hdr-row">
+            <span>HDR</span>
+            <span class="value hdr-only" id="hdr-status">off</span>
+            <input id="ctrl-hdr-demo" type="checkbox" checked />
+          </label>
+          <label class="control hdr-only">
+            <span>Intensity</span>
+            <input id="ctrl-hdr-intensity" type="range" min="0" max="4" step="0.1" value="3" />
+            <span class="value" data-for="ctrl-hdr-intensity">3</span>
+          </label>
+        </details>
+        <details class="section" open>
+          <summary>General</summary>
+          <label class="control">
+            <span>Color</span>
+            <input id="ctrl-color" type="color" value="#7ffffa" />
+            <span class="value" data-for="ctrl-color">#7ffffa</span>
+          </label>
+          <label class="control">
+            <span>Source</span>
+            <div class="source-toggle inline">
+              <label><input id="src-image" type="radio" name="source" value="image" />Image</label>
+              <label><input id="src-text" type="radio" name="source" value="text" checked />Text</label>
+            </div>
+          </label>
+          <div class="source-controls">
+            <label class="control control-image">
+              <button id="open-image" type="button">Open image</button>
+              <input id="file-input" type="file" accept="image/*" />
+            </label>
+            <label class="control control-text">
+              <textarea id="ctrl-text" rows="2">HELLO WORLD</textarea>
+            </label>
+          </div>
+          <label class="control">
+            <span>Particle size</span>
+            <input id="ctrl-size" type="range" min="2" max="24" step="1" value="5" />
+            <span class="value" data-for="ctrl-size">5</span>
+          </label>
+          <label class="control">
+            <span>Particle count</span>
+            <input id="ctrl-count" type="range" min="1" max="500" value="250" />
+            <span class="value" data-for="ctrl-count">250</span>
+          </label>
+          <label class="control">
+            <span>Lifetime</span>
+            <input id="ctrl-life" type="range" min="30" max="300" value="300" />
+            <span class="value" data-for="ctrl-life">300</span>
+          </label>
+          <label class="control">
+            <span>Brightness threshold</span>
+            <input id="ctrl-threshold" type="range" min="0" max="200" value="1" />
+            <span class="value" data-for="ctrl-threshold">1</span>
+          </label>
+          <label class="control">
+            <span>Speed</span>
+            <input id="ctrl-speed" type="range" min="0.2" max="4" step="0.1" value="1" />
+            <span class="value" data-for="ctrl-speed">1</span>
+          </label>
+          <label class="control control-inline">
+            <span>Links</span>
+            <input id="ctrl-links-enabled" type="checkbox" checked />
+          </label>
+          <label class="control">
+            <span>Max distance</span>
+            <input id="ctrl-links-distance" type="range" min="20" max="300" value="45" />
+            <span class="value" data-for="ctrl-links-distance">45</span>
+          </label>
+          <label class="control">
+            <span>Links per particle</span>
+            <input id="ctrl-links-count" type="range" min="0" max="10" value="7" />
+            <span class="value" data-for="ctrl-links-count">7</span>
+          </label>
+        </details>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.2/lib/p5.min.js"></script>
+    <script src="js/sketch.js"></script>
+    <script src="js/hdr-webgpu.js"></script>
+</body>
+
+</html>
