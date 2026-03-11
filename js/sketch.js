@@ -35,7 +35,7 @@ function setup() {
 }
 
 function draw() {
-    if (document.body.dataset.hdrDemo === 'on') {
+    if (document.body.dataset.renderer === 'webgpu') {
         return;
     }
     background(11, 12, 16);

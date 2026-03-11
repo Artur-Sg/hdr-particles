@@ -1,7 +1,9 @@
 (() => {
   const canvas = document.getElementById('gpu-canvas');
-  const toggle = document.getElementById('ctrl-hdr-demo');
+  const renderWebgpu = document.getElementById('render-webgpu');
+  const renderP5 = document.getElementById('render-p5');
   const status = document.getElementById('hdr-status');
+  const hdrOutputToggle = document.getElementById('ctrl-hdr-output');
   const colorInput = document.getElementById('ctrl-color');
   const colorValue = document.querySelector('[data-for="ctrl-color"]');
   const intensityInput = document.getElementById('ctrl-hdr-intensity');
@@ -16,7 +18,7 @@
   const linksDistanceInput = document.getElementById('ctrl-links-distance');
   const linksCountInput = document.getElementById('ctrl-links-count');
 
-  if (!canvas || !toggle || !status) return;
+  if (!canvas || !renderWebgpu || !renderP5 || !status || !hdrOutputToggle) return;
 
   let device = null;
   let context = null;
@@ -25,6 +27,7 @@
   let bindGroup = null;
   let anim = null;
   let hdrActive = false;
+  let hdrRequested = true;
   let currentFormat = null;
   let shaderModule = null;
   let lineShaderModule = null;
@@ -61,8 +64,8 @@
     status.textContent = text;
   };
 
-  const setDemo = (enabled) => {
-    document.body.dataset.hdrDemo = enabled ? 'on' : 'off';
+  const setRenderer = (mode) => {
+    document.body.dataset.renderer = mode;
   };
 
   const resize = () => {
@@ -82,32 +85,39 @@
     const base = { device, alphaMode: 'opaque' };
     let formatUsed = preferred;
 
-    try {
-      context.configure({
-        ...base,
-        format: 'rgba16float',
-        colorSpace: 'display-p3',
-        toneMapping: { mode: 'extended' },
-      });
-      hdrActive = true;
-      formatUsed = 'rgba16float';
-      setStatus('rgba16float/p3/extended');
-    } catch (err) {
+    if (hdrRequested) {
       try {
         context.configure({
           ...base,
-          format: preferred,
+          format: 'rgba16float',
           colorSpace: 'display-p3',
+          toneMapping: { mode: 'extended' },
         });
-        hdrActive = false;
-        formatUsed = preferred;
-        setStatus('p3/sdr');
-      } catch (err2) {
-        context.configure({ ...base, format: preferred });
-        hdrActive = false;
-        formatUsed = preferred;
-        setStatus('sdr');
+        hdrActive = true;
+        formatUsed = 'rgba16float';
+        setStatus('HDR (rgba16float/p3/extended)');
+      } catch (err) {
+        try {
+          context.configure({
+            ...base,
+            format: preferred,
+            colorSpace: 'display-p3',
+          });
+          hdrActive = false;
+          formatUsed = preferred;
+          setStatus('SDR (p3/sdr)');
+        } catch (err2) {
+          context.configure({ ...base, format: preferred });
+          hdrActive = false;
+          formatUsed = preferred;
+          setStatus('SDR');
+        }
       }
+    } else {
+      context.configure({ ...base, format: preferred, colorSpace: 'srgb' });
+      hdrActive = false;
+      formatUsed = preferred;
+      setStatus('SDR');
     }
 
     if (currentFormat !== formatUsed) {
@@ -710,14 +720,24 @@
     }
   };
 
-  toggle.addEventListener('change', async () => {
-    setDemo(toggle.checked);
-    if (toggle.checked) {
+  const applyRenderer = async () => {
+    if (renderWebgpu.checked) {
+      setRenderer('webgpu');
       await start();
     } else {
+      setRenderer('p5');
       stop();
     }
-  });
+  };
+
+  const applyHdrOutput = () => {
+    hdrRequested = hdrOutputToggle.checked;
+    configureContext();
+  };
+
+  renderWebgpu.addEventListener('change', applyRenderer);
+  renderP5.addEventListener('change', applyRenderer);
+  hdrOutputToggle.addEventListener('change', applyHdrOutput);
 
   if (colorInput && colorValue) {
     colorValue.textContent = colorInput.value;
@@ -789,14 +809,13 @@
     if (maskSample && (!maskReady || maskReady())) {
       buildMaskPoints();
     }
-    if (document.body.dataset.hdrDemo === 'on') {
+    if (document.body.dataset.renderer === 'webgpu') {
       applyCount();
     }
   };
 
-  setDemo(true);
+  setRenderer('webgpu');
   setStatus('init');
-  if (toggle.checked) {
-    start();
-  }
+  hdrRequested = hdrOutputToggle.checked;
+  applyRenderer();
 })();

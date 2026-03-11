@@ -16,10 +16,17 @@
       <div class="panel">
         <details class="section" open>
           <summary>HDR</summary>
-          <label class="control control-inline hdr-row">
-            <span>HDR</span>
-            <span class="value hdr-only" id="hdr-status">off</span>
-            <input id="ctrl-hdr-demo" type="checkbox" checked />
+          <label class="control">
+            <span>Renderer</span>
+            <div class="source-toggle inline">
+              <label><input id="render-webgpu" type="radio" name="renderer" value="webgpu" checked />WebGPU</label>
+              <label><input id="render-p5" type="radio" name="renderer" value="p5" />Canvas (p5)</label>
+            </div>
+          </label>
+          <label class="control control-inline hdr-status-row hdr-only">
+            <span>Output</span>
+            <span class="value" id="hdr-status">off</span>
+            <input id="ctrl-hdr-output" type="checkbox" checked />
           </label>
           <label class="control hdr-only">
             <span>Intensity</span>

@@ -32,13 +32,14 @@ canvas {
   z-index: 4;
 }
 
-body[data-hdr-demo="on"] #gpu-canvas {
+body[data-renderer="webgpu"] #gpu-canvas {
   display: block;
 }
 
-body[data-hdr-demo="on"] #app canvas:not(#gpu-canvas) {
+body[data-renderer="webgpu"] #app canvas:not(#gpu-canvas) {
   display: none;
 }
+
 
 
 
@@ -114,6 +115,14 @@ body[data-hdr-demo="on"] #app canvas:not(#gpu-canvas) {
   margin-left: auto;
 }
 
+.hdr-status-row {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hdr-status-row input[type="checkbox"] {
+  margin-left: auto;
+}
 .control input[type="range"] {
   width: 100%;
 }
@@ -141,8 +150,12 @@ body[data-hdr-demo="on"] #app canvas:not(#gpu-canvas) {
   display: none;
 }
 
-body[data-hdr-demo="on"] .hdr-only {
+body[data-renderer="webgpu"] .hdr-only {
   display: flex;
+}
+
+body[data-renderer="p5"] .hdr-output-only {
+  display: none;
 }
 
 .source-toggle {
