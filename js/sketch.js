@@ -13,7 +13,7 @@ const params = {
     threshold: 1,
     speed: 1,
     size: 5,
-    color: { r: 127, g: 255, b: 250 },
+    color: { r: 31, g: 255, b: 248 },
     linksEnabled: true,
     linksDistance: 45,
     linksCount: 7,
