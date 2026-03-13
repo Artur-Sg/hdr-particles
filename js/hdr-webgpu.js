@@ -14,9 +14,9 @@
   const lifeInput = document.getElementById('ctrl-life');
   const speedInput = document.getElementById('ctrl-speed');
   const thresholdInput = document.getElementById('ctrl-threshold');
-  const linksEnabledInput = document.getElementById('ctrl-links-enabled');
   const linksDistanceInput = document.getElementById('ctrl-links-distance');
   const linksCountInput = document.getElementById('ctrl-links-count');
+  const linksWidthInput = document.getElementById('ctrl-links-width');
 
   if (!canvas || !renderWebgpu || !renderP5 || !status || !hdrOutputToggle) return;
 
@@ -51,9 +51,9 @@
   let maxLife = 300;
   let speed = 1;
   let speedFactor = 1;
-  let linksEnabled = true;
   let linksDistancePx = 45;
   let linksPerParticle = 7;
+  let linksWidth = 1;
   let linePositions = null;
   let maskReady = () => false;
   let maskSample = null;
@@ -209,7 +209,7 @@
           },
         ],
       },
-      primitive: { topology: 'line-list' },
+      primitive: { topology: 'triangle-list' },
       multisample: { count: 4 },
     });
   };
@@ -475,7 +475,7 @@
   };
 
   const buildLinks = () => {
-    if (!linksEnabled || linksPerParticle <= 0) {
+    if (linksPerParticle <= 0 || linksWidth <= 0) {
       lineVertexCount = 0;
       return;
     }
@@ -547,10 +547,46 @@
         const dist = Math.sqrt(best[k].d2);
         const alpha = Math.max(0, 1 - dist / maxDist) * 0.7 * Math.min(lifeT[i], lifeT[j]);
         if (alpha <= 0) continue;
-        const idxI = i * 2;
-        const idxJ = j * 2;
-        lines.push(positions[idxI], -positions[idxI + 1], alpha);
-        lines.push(positions[idxJ], -positions[idxJ + 1], alpha);
+        const x1 = px[i];
+        const y1 = py[i];
+        const x2 = px[j];
+        const y2 = py[j];
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len <= 0.0001) continue;
+        const nx = -dy / len;
+        const ny = dx / len;
+        const half = linksWidth * 0.5;
+
+        const a1x = x1 + nx * half;
+        const a1y = y1 + ny * half;
+        const b1x = x1 - nx * half;
+        const b1y = y1 - ny * half;
+        const a2x = x2 + nx * half;
+        const a2y = y2 + ny * half;
+        const b2x = x2 - nx * half;
+        const b2y = y2 - ny * half;
+
+        const toNdcX = (x) => (x / canvas.width) * 2 - 1;
+        const toNdcY = (y) => (y / canvas.height) * 2 - 1;
+
+        const a1nx = toNdcX(a1x);
+        const a1ny = toNdcY(a1y);
+        const b1nx = toNdcX(b1x);
+        const b1ny = toNdcY(b1y);
+        const a2nx = toNdcX(a2x);
+        const a2ny = toNdcY(a2y);
+        const b2nx = toNdcX(b2x);
+        const b2ny = toNdcY(b2y);
+
+        // Two triangles per segment.
+        lines.push(a1nx, a1ny, alpha);
+        lines.push(b1nx, b1ny, alpha);
+        lines.push(a2nx, a2ny, alpha);
+        lines.push(b1nx, b1ny, alpha);
+        lines.push(b2nx, b2ny, alpha);
+        lines.push(a2nx, a2ny, alpha);
       }
     }
 
@@ -592,9 +628,9 @@
   };
 
   const applyLinks = () => {
-    linksEnabled = linksEnabledInput ? linksEnabledInput.checked : true;
     linksDistancePx = linksDistanceInput ? parseFloat(linksDistanceInput.value) : 45;
     linksPerParticle = linksCountInput ? parseInt(linksCountInput.value, 10) : 7;
+    linksWidth = linksWidthInput ? parseFloat(linksWidthInput.value) : 1;
   };
 
   const refreshMaskRefs = () => {
@@ -778,11 +814,6 @@
     });
   }
 
-  if (linksEnabledInput) {
-    linksEnabledInput.addEventListener('change', () => {
-      applyLinks();
-    });
-  }
   if (linksDistanceInput) {
     linksDistanceInput.addEventListener('input', () => {
       applyLinks();
@@ -790,6 +821,11 @@
   }
   if (linksCountInput) {
     linksCountInput.addEventListener('input', () => {
+      applyLinks();
+    });
+  }
+  if (linksWidthInput) {
+    linksWidthInput.addEventListener('input', () => {
       applyLinks();
     });
   }

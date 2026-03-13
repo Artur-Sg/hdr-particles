@@ -14,10 +14,10 @@ const params = {
     speed: 1,
     size: 5,
     color: { r: 31, g: 255, b: 248 },
-    linksEnabled: true,
     linksDistance: 45,
     linksCount: 7,
     linksLife: 30,
+    linksWidth: 1,
 };
 
 function setup() {
@@ -64,8 +64,9 @@ function setupFileUI() {
         { id: 'ctrl-size', key: 'size' },
         { id: 'ctrl-links-distance', key: 'linksDistance' },
         { id: 'ctrl-links-count', key: 'linksCount' },
+        { id: 'ctrl-links-width', key: 'linksWidth' },
     ];
-    const toggles = [{ id: 'ctrl-links-enabled', key: 'linksEnabled' }];
+    const toggles = [];
 
     const setMode = (mode) => {
         sourceMode = mode;
@@ -167,9 +168,7 @@ function updateParticles() {
         spawnFromBrightness(params.spawnCount);
     }
 
-    if (params.linksEnabled) {
-        updateConnections();
-    }
+    updateConnections();
 
     for (let i = particles.length - 1; i >= 0; i -= 1) {
         const p = particles[i];
@@ -180,9 +179,7 @@ function updateParticles() {
         }
     }
 
-    if (params.linksEnabled) {
-        renderConnections();
-    }
+    renderConnections();
 }
 
 function onImageLoaded() {
@@ -347,6 +344,9 @@ class Particle {
 }
 
 function updateConnections() {
+    if (params.linksWidth <= 0 || params.linksCount <= 0) {
+        return;
+    }
     const maxDist = params.linksDistance;
     const maxDistSq = maxDist * maxDist;
     const maxLinks = params.linksCount;
@@ -428,12 +428,15 @@ function updateConnections() {
 }
 
 function renderConnections() {
+    if (params.linksWidth <= 0 || params.linksCount <= 0) {
+        return;
+    }
     const byId = new Map();
     for (let i = 0; i < particles.length; i += 1) {
         byId.set(particles[i].id, particles[i]);
     }
 
-    strokeWeight(1);
+    strokeWeight(params.linksWidth);
     for (let i = 0; i < particles.length; i += 1) {
         const p = particles[i];
         for (const [id, life] of p.links) {

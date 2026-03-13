@@ -59,17 +59,22 @@
           </div>
           <label class="control">
             <span>Particle size</span>
-            <input id="ctrl-size" type="range" min="2" max="24" step="1" value="5" />
+            <input id="ctrl-size" type="range" min="0" max="50" step="1" value="5" />
             <span class="value" data-for="ctrl-size">5</span>
           </label>
           <label class="control">
+            <span>Link thickness</span>
+            <input id="ctrl-links-width" type="range" min="0" max="50" step="0.5" value="1" />
+            <span class="value" data-for="ctrl-links-width">1</span>
+          </label>
+          <label class="control">
             <span>Particle count</span>
-            <input id="ctrl-count" type="range" min="1" max="500" value="250" />
+            <input id="ctrl-count" type="range" min="1" max="1000" value="250" />
             <span class="value" data-for="ctrl-count">250</span>
           </label>
           <label class="control">
             <span>Lifetime</span>
-            <input id="ctrl-life" type="range" min="30" max="300" value="300" />
+            <input id="ctrl-life" type="range" min="30" max="1000" value="300" />
             <span class="value" data-for="ctrl-life">300</span>
           </label>
           <label class="control">
@@ -82,18 +87,14 @@
             <input id="ctrl-speed" type="range" min="0.2" max="4" step="0.1" value="1" />
             <span class="value" data-for="ctrl-speed">1</span>
           </label>
-          <label class="control control-inline">
-            <span>Links</span>
-            <input id="ctrl-links-enabled" type="checkbox" checked />
-          </label>
           <label class="control">
             <span>Max distance</span>
-            <input id="ctrl-links-distance" type="range" min="20" max="300" value="45" />
+            <input id="ctrl-links-distance" type="range" min="1" max="500" value="50" />
             <span class="value" data-for="ctrl-links-distance">45</span>
           </label>
           <label class="control">
             <span>Links per particle</span>
-            <input id="ctrl-links-count" type="range" min="0" max="10" value="7" />
+            <input id="ctrl-links-count" type="range" min="0" max="100" value="7" />
             <span class="value" data-for="ctrl-links-count">7</span>
           </label>
         </details>
