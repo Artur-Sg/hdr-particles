@@ -106,9 +106,14 @@ function setupFileUI() {
         }
     });
 
+    let textDebounce = null;
     textInput.addEventListener('input', () => {
         if (sourceMode !== 'text') return;
-        generateFromText(textInput.value);
+        if (textDebounce) clearTimeout(textDebounce);
+        textDebounce = setTimeout(() => {
+            generateFromText(textInput.value);
+            textDebounce = null;
+        }, 160);
     });
 
     controls.forEach(({ id, key }) => {
@@ -164,6 +169,10 @@ function windowResized() {
 }
 
 function updateParticles() {
+    if (window.hdrMaskEmpty) {
+        particles.length = 0;
+        return;
+    }
     if (imgReady) {
         spawnFromBrightness(params.spawnCount);
     }
@@ -196,6 +205,18 @@ function onImageLoaded() {
 
 function generateFromText(text) {
     imgReady = false;
+    const trimmed = text ? text.trim() : '';
+    if (!trimmed) {
+        imgPixels = null;
+        imgW = 0;
+        imgH = 0;
+        imgFit = null;
+        particles.length = 0;
+        window.hdrMaskEmpty = true;
+        if (window.hdrMaskUpdated) window.hdrMaskUpdated();
+        return;
+    }
+    window.hdrMaskEmpty = false;
     const gfx = createGraphics(width, height);
     gfx.pixelDensity(1);
     gfx.clear();
@@ -203,7 +224,7 @@ function generateFromText(text) {
     gfx.noStroke();
     gfx.textAlign(CENTER, CENTER);
 
-    const content = text && text.trim() ? text : ' ';
+    const content = trimmed;
     const targetW = width * 0.75;
     const targetH = height * 0.75;
     let fontSize = min(width, height) * 0.35;
@@ -281,6 +302,7 @@ function canvasToImage(x, y) {
 }
 
 function brightnessAtCanvas(x, y) {
+    if (window.hdrMaskEmpty) return 0;
     if (!imgPixels) return 0;
     const p = canvasToImage(x, y);
     if (!p) return 0;
