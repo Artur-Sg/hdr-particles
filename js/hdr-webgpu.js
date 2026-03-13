@@ -57,6 +57,7 @@
   let linePositions = null;
   let maskReady = () => false;
   let maskSample = null;
+  let maskInvert = () => false;
   let maskPoints = [];
   let maskDirty = true;
 
@@ -443,8 +444,11 @@
 
       if (maskSample && (!maskReady || maskReady())) {
         const b = maskSample(x, y);
-        const threshold = thresholdInput ? parseFloat(thresholdInput.value) : 1;
-        if (b < threshold) {
+        const raw = thresholdInput ? parseFloat(thresholdInput.value) : 1;
+        const threshold = Math.abs(raw);
+        const invert = raw < 0 ? true : maskInvert();
+        const pass = invert ? b <= threshold : b >= threshold;
+        if (!pass) {
           const pos = spawnInMask();
           positions[idx] = pos[0];
           positions[idx + 1] = pos[1];
@@ -636,6 +640,7 @@
   const refreshMaskRefs = () => {
     if (window.hdrMaskSample) maskSample = window.hdrMaskSample;
     if (window.hdrMaskReady) maskReady = window.hdrMaskReady;
+    if (window.hdrMaskInvert) maskInvert = window.hdrMaskInvert;
     maskDirty = true;
   };
 
@@ -653,14 +658,19 @@
       maskPoints = [];
       return;
     }
-    const threshold = thresholdInput ? parseFloat(thresholdInput.value) : 1;
+    const raw = thresholdInput ? parseFloat(thresholdInput.value) : 1;
+    const threshold = Math.abs(raw);
+    const invert = raw < 0 ? true : maskInvert();
     const step = 6;
     const points = [];
     for (let y = 0; y < canvas.height; y += step) {
       const ny = (y / canvas.height) * 2 - 1;
       for (let x = 0; x < canvas.width; x += step) {
         const nx = (x / canvas.width) * 2 - 1;
-        if (maskSample(nx, ny) >= threshold) {
+        const b = maskSample(nx, ny);
+        if (b < 0) continue;
+        const pass = invert ? b <= threshold : b >= threshold;
+        if (pass) {
           points.push(nx, ny);
         }
       }

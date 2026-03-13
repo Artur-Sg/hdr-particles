@@ -4,6 +4,7 @@ let imgPixels = null;
 let imgW = 0;
 let imgH = 0;
 let imgFit = null;
+let maskAutoInvert = false;
 const particles = [];
 let nextParticleId = 1;
 let sourceMode = 'text';
@@ -29,9 +30,10 @@ function setup() {
     window.hdrMaskSample = (nx, ny) => {
         const x = (nx * 0.5 + 0.5) * width;
         const y = (ny * 0.5 + 0.5) * height;
-        return brightnessAtCanvas(x, y);
+        return maskBrightnessAtCanvas(x, y);
     };
     window.hdrMaskReady = () => imgReady;
+    window.hdrMaskInvert = () => maskAutoInvert;
 }
 
 function draw() {
@@ -197,6 +199,7 @@ function onImageLoaded() {
     imgPixels = loadedImg.pixels;
     imgW = loadedImg.width;
     imgH = loadedImg.height;
+    maskAutoInvert = computeAutoInvert();
     imgFit = computeImageFit();
     imgReady = true;
     particles.length = 0;
@@ -274,6 +277,7 @@ function generateFromText(text) {
     imgPixels = gfx.pixels;
     imgW = gfx.width;
     imgH = gfx.height;
+    maskAutoInvert = computeAutoInvert();
     imgFit = { x: 0, y: 0, w: width, h: height, scale: 1 };
     imgReady = true;
     particles.length = 0;
@@ -291,6 +295,23 @@ function computeImageFit() {
         h,
         scale,
     };
+}
+
+function computeAutoInvert() {
+    if (!imgPixels || imgW === 0 || imgH === 0) return false;
+    const step = max(1, floor(min(imgW, imgH) / 80));
+    let sum = 0;
+    let count = 0;
+    for (let y = 0; y < imgH; y += step) {
+        for (let x = 0; x < imgW; x += step) {
+            const idx = (y * imgW + x) * 4;
+            sum += (imgPixels[idx] + imgPixels[idx + 1] + imgPixels[idx + 2]) / 3;
+            count += 1;
+        }
+    }
+    if (count === 0) return false;
+    const avg = sum / count;
+    return avg > 140;
 }
 
 function canvasToImage(x, y) {
@@ -315,13 +336,36 @@ function brightnessAtCanvas(x, y) {
     return (r + g + b) / 3;
 }
 
+function maskHasPixel(x, y) {
+    if (!imgPixels || !imgFit) return false;
+    return !!canvasToImage(x, y);
+}
+
+function maskBrightnessAtCanvas(x, y) {
+    if (window.hdrMaskEmpty) return -1;
+    if (!imgPixels) return -1;
+    const p = canvasToImage(x, y);
+    if (!p) return -1;
+    const ix = floor(p.x);
+    const iy = floor(p.y);
+    const idx = (iy * imgW + ix) * 4;
+    const r = imgPixels[idx];
+    const g = imgPixels[idx + 1];
+    const b = imgPixels[idx + 2];
+    return (r + g + b) / 3;
+}
+
 function spawnFromBrightness(count) {
     if (!imgFit) return;
     for (let i = 0; i < count; i += 1) {
         const x = random(imgFit.x, imgFit.x + imgFit.w);
         const y = random(imgFit.y, imgFit.y + imgFit.h);
-        const b = brightnessAtCanvas(x, y);
-        if (b > params.threshold && random(255) < b) {
+        const b = maskBrightnessAtCanvas(x, y);
+        if (b < 0) continue;
+        const threshold = Math.abs(params.threshold);
+        const invert = params.threshold < 0 ? true : maskAutoInvert;
+        const pass = invert ? b <= threshold : b >= threshold;
+        if (pass && random(255) < b) {
             particles.push(new Particle(createVector(x, y), b));
         }
     }
@@ -344,8 +388,15 @@ class Particle {
 
     update() {
         const next = p5.Vector.add(this.pos, this.dir);
-        const b = brightnessAtCanvas(next.x, next.y);
-        if (b < params.threshold) {
+        const b = maskBrightnessAtCanvas(next.x, next.y);
+        if (b < 0) {
+            this.age = this.life;
+            return;
+        }
+        const threshold = Math.abs(params.threshold);
+        const invert = params.threshold < 0 ? true : maskAutoInvert;
+        const pass = invert ? b <= threshold : b >= threshold;
+        if (!pass) {
             this.age = this.life;
             return;
         }
